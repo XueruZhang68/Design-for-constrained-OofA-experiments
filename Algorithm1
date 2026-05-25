@@ -1,1 +1,39 @@
-
+ta_kahn_random<-function(m,edges,redu_edges,num_runs,num_seq,num_rounds){
+  ta_vector <- NULL
+  k <- 1
+  while (k < num_seq+1) {
+    #generate an initial design
+    init_design <-t(sapply(1:num_runs,function(x){topo_sort_kahn_random(redu_edges, 1:m)}))
+    regdesign <- consregdesign(init_design,constrain = edges)$regdesign
+    init_dvalue <- (det(t(regdesign)%*%regdesign))^{1/ncol(regdesign)}/nrow(design)
+    #generate a neighbour design
+    design <- init_design
+    index.row <- sample(1:1:num_runs,1)# randomly draw a row from initial design
+    design[index.row,]<-t(perturb_topo(design[index.row,], redu_edges))
+    regdesign <- consregdesign(design,constrain = edges)$regdesign
+    dvalue <- (det(t(regdesign)%*%regdesign))^{1/ncol(regdesign)}/nrow(design)
+    if (is.na(abs(init_dvalue-dvalue))==FALSE & init_dvalue*dvalue!=0){
+      ta_vector<-c(ta_vector, abs(init_dvalue-dvalue))
+      k <- k+1
+    }
+}
+  ta_vector <- sort(ta_vector, decreasing = TRUE)[(num_seq-num_rounds+1):num_seq] #Use the lower 50% of values as the threshold sequence
+#TA algorithm
+  for(i in 1:num_rounds){
+    index.avali <- TRUE
+    while (index.avali) {
+    #generate a neighbour design
+    design <- init_design
+    index.row <- sample(1:1:num_runs,1)# randomly draw a row from initial design
+    design[index.row,]<-t(perturb_topo(design[index.row,], redu_edges))
+    regdesign <- consregdesign(design,constrain = edges)$regdesign
+    dvalue <- (det(t(regdesign)%*%regdesign))^{1/ncol(regdesign)}/nrow(design)
+    index.avali <- dvalue==0 || is.na(dvalue)
+    }
+    if (dvalue > init_dvalue - ta_vector[i]){
+      init_design <- design
+      init_dvalue <- dvalue
+    }
+  }
+  return(list(design=init_design,dvalue=init_dvalue))
+}

@@ -358,7 +358,7 @@ make_full_S2 <- function(groups, constraints, group_constraint = NULL) {
 }
 
 ## ---------------------------------------------------------
-## 7. Example: Table tt1 Case 19
+## 7. Example:  m = 8, groups = (3,5), constraint 1 -> 2 in G1
 ## ---------------------------------------------------------
 
 groups <- list(

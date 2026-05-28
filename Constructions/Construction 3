@@ -1,1 +1,314 @@
+############################################################
+## Construction 3 for one pairwise constraint i_c -> j_c
+############################################################
 
+## ---------------------------------------------------------
+## 1. Basic utilities
+## ---------------------------------------------------------
+
+all_perms <- function(x) {
+  if (length(x) == 1) {
+    return(matrix(x, nrow = 1))
+  }
+  out <- list()
+  idx <- 1
+  for (i in seq_along(x)) {
+    sub <- all_perms(x[-i])
+    out[[idx]] <- cbind(x[i], sub)
+    idx <- idx + 1
+  }
+  do.call(rbind, out)
+}
+
+reverse_rows <- function(D) {
+  D[, ncol(D):1, drop = FALSE]
+}
+
+lcm2 <- function(a, b) {
+  a * b / gcd2(a, b)
+}
+
+gcd2 <- function(a, b) {
+  while (b != 0) {
+    tmp <- b
+    b <- a %% b
+    a <- tmp
+  }
+  a
+}
+
+lcm_vec <- function(x) {
+  Reduce(lcm2, x)
+}
+
+repeat_to_n <- function(D, n) {
+  if (n %% nrow(D) != 0) {
+    stop("n must be a multiple of nrow(D).")
+  }
+  D[rep(seq_len(nrow(D)), times = n / nrow(D)), , drop = FALSE]
+}
+
+## Unconstrained OofA-OA building block.
+## Here we use the full OofA design and repeat it to n rows.
+make_oofa_full_repeated <- function(labels, n) {
+  D0 <- all_perms(labels)
+  repeat_to_n(D0, n)
+}
+
+## COofA-OA building block with a single constraint ic -> jc.
+## We start from the full OofA design and reverse rows violating the constraint.
+make_coofa_reversal_repeated <- function(labels, ic, jc, n) {
+  if (!(ic %in% labels && jc %in% labels)) {
+    stop("Both ic and jc must be contained in labels.")
+  }
+  
+  D0 <- all_perms(labels)
+  D1 <- D0
+  
+  for (r in seq_len(nrow(D0))) {
+    pos_ic <- which(D0[r, ] == ic)
+    pos_jc <- which(D0[r, ] == jc)
+    
+    if (pos_ic > pos_jc) {
+      D1[r, ] <- rev(D0[r, ])
+    }
+  }
+  
+  repeat_to_n(D1, n)
+}
+
+## ---------------------------------------------------------
+## 2. Block-design condition check
+## ---------------------------------------------------------
+
+check_block_condition <- function(blocks, m, verbose = TRUE) {
+  b <- length(blocks)
+  inc <- matrix(0, nrow = b, ncol = m)
+  
+  for (l in seq_along(blocks)) {
+    inc[l, blocks[[l]]] <- 1
+  }
+  
+  r <- colSums(inc)
+  lambda <- t(inc) %*% inc
+  
+  max_diff <- 0
+  
+  for (i in seq_len(m)) {
+    for (j in seq_len(m)) {
+      for (h in seq_len(m)) {
+        if (length(unique(c(i, j, h))) == 3) {
+          lhs <- lambda[i, h] - lambda[j, h]
+          rhs <- (r[i] - r[j]) / 2
+          max_diff <- max(max_diff, abs(lhs - rhs))
+        }
+      }
+    }
+  }
+  
+  if (verbose) {
+    cat("Block condition max difference =", max_diff, "\n")
+  }
+  
+  list(
+    ok = (max_diff == 0),
+    r = r,
+    lambda = lambda,
+    max_diff = max_diff
+  )
+}
+
+## ---------------------------------------------------------
+## 3. Construction 3
+## ---------------------------------------------------------
+
+construction_G11 <- function(m, ic, jc, blocks, n = NULL) {
+  ## m: number of components
+  ## ic -> jc: pairwise constraint
+  ## blocks: list of blocks, each block is a vector of labels
+  
+  d <- length(blocks[[1]])
+  if (!all(sapply(blocks, length) == d)) {
+    stop("All blocks must have the same size d.")
+  }
+  if (d >= m) {
+    stop("The block size d must be smaller than m.")
+  }
+  
+  ## Choose n so that full OofA building blocks on sizes d and m-d
+  ## can both be repeated to n rows.
+  if (is.null(n)) {
+    n <- lcm_vec(c(factorial(d), factorial(m - d)))
+  }
+  
+  all_labels <- seq_len(m)
+  D_list <- list()
+  
+  for (l in seq_along(blocks)) {
+    o_l <- blocks[[l]]
+    comp_l <- setdiff(all_labels, o_l)
+    
+    ic_in_block <- ic %in% o_l
+    jc_in_block <- jc %in% o_l
+    
+    ## Case 1: ic and jc both inside o_l
+    if (ic_in_block && jc_in_block) {
+      B_l <- make_coofa_reversal_repeated(o_l, ic, jc, n)
+      C_l <- make_oofa_full_repeated(comp_l, n)
+      
+      D_l <- rbind(
+        cbind(B_l, C_l),
+        cbind(reverse_rows(C_l), B_l)
+      )
+    }
+    
+    ## Case 2: ic and jc both outside o_l
+    if (!ic_in_block && !jc_in_block) {
+      B_l <- make_oofa_full_repeated(o_l, n)
+      C_l <- make_coofa_reversal_repeated(comp_l, ic, jc, n)
+      
+      D_l <- rbind(
+        cbind(B_l, C_l),
+        cbind(C_l, reverse_rows(B_l))
+      )
+    }
+    
+    ## Case 3: ic inside o_l, jc outside o_l
+    if (ic_in_block && !jc_in_block) {
+      B_l <- make_oofa_full_repeated(o_l, n)
+      C_l <- make_oofa_full_repeated(comp_l, n)
+      
+      D_l <- rbind(
+        cbind(B_l, C_l),
+        cbind(B_l, reverse_rows(C_l))
+      )
+    }
+    
+    ## Case 4: ic outside o_l, jc inside o_l
+    if (!ic_in_block && jc_in_block) {
+      B_l <- make_oofa_full_repeated(o_l, n)
+      C_l <- make_oofa_full_repeated(comp_l, n)
+      
+      D_l <- rbind(
+        cbind(C_l, B_l),
+        cbind(reverse_rows(C_l), B_l)
+      )
+    }
+    
+    D_list[[l]] <- D_l
+  }
+  
+  do.call(rbind, D_list)
+}
+
+## ---------------------------------------------------------
+## 4. Model matrix and verification
+## ---------------------------------------------------------
+
+is_feasible_constraint <- function(D, ic, jc) {
+  all(apply(D, 1, function(row) {
+    which(row == ic) < which(row == jc)
+  }))
+}
+
+make_X_constrained_PWO <- function(D, m, ic, jc) {
+  ## Intercept + all PWO factors except the constrained pair.
+  ## Pair convention: I_ij for i < j equals +1 if i precedes j.
+  
+  all_pairs <- t(combn(seq_len(m), 2))
+  drop_pair <- sort(c(ic, jc))
+  
+  keep <- !(all_pairs[, 1] == drop_pair[1] & all_pairs[, 2] == drop_pair[2])
+  pairs <- all_pairs[keep, , drop = FALSE]
+  
+  n <- nrow(D)
+  X <- matrix(1, nrow = n, ncol = 1)
+  col_names <- "Intercept"
+  
+  for (a in seq_len(nrow(pairs))) {
+    i <- pairs[a, 1]
+    j <- pairs[a, 2]
+    
+    z <- numeric(n)
+    for (r in seq_len(n)) {
+      pos_i <- which(D[r, ] == i)
+      pos_j <- which(D[r, ] == j)
+      z[r] <- ifelse(pos_i < pos_j, 1, -1)
+    }
+    
+    X <- cbind(X, z)
+    col_names <- c(col_names, paste0("I", i, j))
+  }
+  
+  colnames(X) <- col_names
+  X
+}
+
+make_full_constrained_design <- function(m, ic, jc) {
+  D0 <- all_perms(seq_len(m))
+  keep <- apply(D0, 1, function(row) {
+    which(row == ic) < which(row == jc)
+  })
+  D0[keep, , drop = FALSE]
+}
+
+norm_info <- function(D, m, ic, jc) {
+  X <- make_X_constrained_PWO(D, m, ic, jc)
+  crossprod(X) / nrow(X)
+}
+
+D_eff <- function(MD, MF) {
+  p <- ncol(MD)
+  logdet_MD <- determinant(MD, logarithm = TRUE)$modulus[1]
+  logdet_MF <- determinant(MF, logarithm = TRUE)$modulus[1]
+  as.numeric(exp((logdet_MD - logdet_MF) / p))
+}
+
+## ---------------------------------------------------------
+## 5. Example: m = 5, constraint 1 -> 2
+## ---------------------------------------------------------
+
+m <- 5
+ic <- 1
+jc <- 2
+
+## BIBD(5,10,4,2,1): all two-element blocks
+blocks <- combn(seq_len(m), 2, simplify = FALSE)
+
+## Check block condition
+block_check <- check_block_condition(blocks, m)
+print(block_check$ok)
+
+## Apply Construction G11
+D_G11 <- construction_G11(
+  m = m,
+  ic = ic,
+  jc = jc,
+  blocks = blocks
+)
+
+cat("Dimension of D_G11:\n")
+print(dim(D_G11))
+
+cat("All rows satisfy the constraint 1 -> 2:\n")
+print(is_feasible_constraint(D_G11, ic, jc))
+
+## Full constrained design
+D_full <- make_full_constrained_design(m, ic, jc)
+
+## Compare normalized information matrices
+M_D <- norm_info(D_G11, m, ic, jc)
+M_F <- norm_info(D_full, m, ic, jc)
+
+max_diff <- max(abs(M_D - M_F))
+D_eff_value <- D_eff(M_D, M_F)
+
+cat("\nVerification results:\n")
+cat("Run size of constructed design n =", nrow(D_G11), "\n")
+cat("Run size of full constrained design N =", nrow(D_full), "\n")
+cat("Number of parameters p =", ncol(M_D), "\n")
+cat("max |M_D - M_F| =", max_diff, "\n")
+cat("D_eff =", D_eff_value, "\n")
+
+## Optional: inspect the first rows
+head(D_G11)

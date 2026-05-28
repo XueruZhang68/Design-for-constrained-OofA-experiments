@@ -6,7 +6,7 @@
 ## Data
 - `clean_survey_data_4162024.csv`: dataset
 
-## Folders
+## Code
 
 - `OofASurveyCodev2.R`: Figure 2 and Table 5
   

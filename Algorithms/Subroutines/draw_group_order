@@ -1,0 +1,15 @@
+#--------------------------------------------------------------
+# draw_group_order : draw a group order satisfying the
+# group-level constraint (if any).
+#   ng          : number of groups
+#   tilde_edges : NULL (entirely free) or c(gi, gj) meaning
+#                 group G_gi must precede group G_gj
+#--------------------------------------------------------------
+draw_group_order <- function(ng, tilde_edges = NULL) {
+  repeat {
+    gpi <- sample(seq_len(ng), ng)
+    if (is.null(tilde_edges)) return(gpi)
+    if (which(gpi == tilde_edges[1]) < which(gpi == tilde_edges[2]))
+      return(gpi)
+  }
+}

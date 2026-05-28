@@ -1,1 +1,204 @@
+############################################################
+## Construction 1 for COofA-OAs
+############################################################
 
+## ---------------------------------------------------------
+## 1. Basic utilities
+## ---------------------------------------------------------
+
+## Generate all permutations of a vector
+all_perms <- function(x) {
+  if (length(x) == 1) {
+    return(matrix(x, nrow = 1))
+  }
+  out <- list()
+  idx <- 1
+  for (i in seq_along(x)) {
+    rest <- x[-i]
+    sub <- all_perms(rest)
+    out[[idx]] <- cbind(x[i], sub)
+    idx <- idx + 1
+  }
+  do.call(rbind, out)
+}
+
+## Construct PWO model matrix under fixed group order.
+## Only intra-group PWO factors are used, plus intercept.
+make_X_fixed_groups <- function(D, groups) {
+  n <- nrow(D)
+  X <- matrix(1, nrow = n, ncol = 1)
+  col_names <- "Intercept"
+  
+  for (g in groups) {
+    if (length(g) >= 2) {
+      pairs <- combn(g, 2)
+      for (a in seq_len(ncol(pairs))) {
+        i <- pairs[1, a]
+        j <- pairs[2, a]
+        
+        z <- numeric(n)
+        for (r in seq_len(n)) {
+          pos_i <- which(D[r, ] == i)
+          pos_j <- which(D[r, ] == j)
+          z[r] <- ifelse(pos_i < pos_j, 1, -1)
+        }
+        
+        X <- cbind(X, z)
+        col_names <- c(col_names, paste0("I", i, j))
+      }
+    }
+  }
+  
+  colnames(X) <- col_names
+  X
+}
+
+## Normalized information matrix
+norm_info <- function(D, groups) {
+  X <- make_X_fixed_groups(D, groups)
+  crossprod(X) / nrow(X)
+}
+
+## D-efficiency based on normalized information matrices
+D_eff <- function(MD, MF) {
+  p <- ncol(MD)
+  as.numeric((det(MD) / det(MF))^(1 / p))
+}
+
+## Full design under fixed group order:
+## all within-group permutations, concatenated by group order
+make_full_fixed_group_design <- function(groups) {
+  P_list <- lapply(groups, all_perms)
+  grid <- expand.grid(lapply(P_list, function(P) seq_len(nrow(P))))
+  
+  D_full <- matrix(NA, nrow = nrow(grid), ncol = sum(lengths(groups)))
+  
+  for (r in seq_len(nrow(grid))) {
+    row_vec <- c()
+    for (k in seq_along(groups)) {
+      row_vec <- c(row_vec, P_list[[k]][grid[r, k], ])
+    }
+    D_full[r, ] <- row_vec
+  }
+  
+  D_full
+}
+
+## Check strength-two OA
+check_OA_strength2 <- function(OA, levels_vec) {
+  q <- ncol(OA)
+  ok <- TRUE
+  
+  for (a in 1:(q - 1)) {
+    for (b in (a + 1):q) {
+      tab <- table(
+        factor(OA[, a], levels = 1:levels_vec[a]),
+        factor(OA[, b], levels = 1:levels_vec[b])
+      )
+      target <- nrow(OA) / (levels_vec[a] * levels_vec[b])
+      
+      if (!all(tab == target)) {
+        ok <- FALSE
+        cat("Failed columns:", a, b, "\n")
+        print(tab)
+      }
+    }
+  }
+  
+  ok
+}
+
+## ---------------------------------------------------------
+## 2. Construction 1
+## ---------------------------------------------------------
+
+construction_G1 <- function(D_list, OA) {
+  n_OA <- nrow(OA)
+  m <- sum(sapply(D_list, ncol))
+  
+  D <- matrix(NA, nrow = n_OA, ncol = m)
+  
+  for (r in seq_len(n_OA)) {
+    row_vec <- c()
+    for (k in seq_along(D_list)) {
+      row_index <- OA[r, k]
+      row_vec <- c(row_vec, D_list[[k]][row_index, ])
+    }
+    D[r, ] <- row_vec
+  }
+  
+  D
+}
+
+## ---------------------------------------------------------
+## 3. Example: m = 8, groups = (3,5)
+## ---------------------------------------------------------
+
+groups <- list(
+  G1 = 1:3,
+  G2 = 4:8
+)
+
+## D1: OofA-OA(6,3), here the full 3! design
+D1 <- all_perms(1:3)
+
+## D2: a 12-run OofA-OA(12,5) on labels 4,5,6,7,8.
+## The following base design is on labels 1,...,5 and is shifted by +3.
+D2_base <- rbind(
+  c(1, 2, 4, 5, 3),
+  c(1, 3, 4, 5, 2),
+  c(2, 1, 5, 3, 4),
+  c(2, 3, 5, 1, 4),
+  c(3, 1, 5, 2, 4),
+  c(3, 2, 4, 5, 1),
+  c(4, 1, 2, 3, 5),
+  c(4, 3, 2, 1, 5),
+  c(4, 5, 2, 3, 1),
+  c(5, 1, 4, 3, 2),
+  c(5, 2, 4, 1, 3),
+  c(5, 3, 4, 1, 2)
+)
+
+D2 <- D2_base + 3
+
+## OA(72; 6^1 12^1; 2)
+## Since there are only two columns, the full 6 x 12 combinations form the OA.
+OA_72_6_12 <- as.matrix(expand.grid(
+  col1 = 1:6,
+  col2 = 1:12
+))
+
+## Check the OA
+cat("Check OA(72;6^1 12^1;2):\n")
+print(check_OA_strength2(OA_72_6_12, c(6, 12)))
+
+## Apply Construction G1
+D_G1 <- construction_G1(
+  D_list = list(D1, D2),
+  OA = OA_72_6_12
+)
+
+cat("Dimension of constructed design D:\n")
+print(dim(D_G1))
+
+## ---------------------------------------------------------
+## 4. Verify information-matrix equality
+## ---------------------------------------------------------
+
+D_full <- make_full_fixed_group_design(groups)
+
+M_D <- norm_info(D_G1, groups)
+M_F <- norm_info(D_full, groups)
+
+max_diff <- max(abs(M_D - M_F))
+D_eff_value <- D_eff(M_D, M_F)
+
+cat("\nVerification results:\n")
+cat("Run size of constructed design n =", nrow(D_G1), "\n")
+cat("Run size of full design N =", nrow(D_full), "\n")
+cat("Number of parameters p =", ncol(M_D), "\n")
+cat("max |M_D - M_F| =", max_diff, "\n")
+cat("D_eff =", D_eff_value, "\n")
+
+## Optional: inspect the final design
+head(D_G1)

@@ -1,0 +1,34 @@
+##
+#--------------------------------------------------------------
+# Function: pai_cons_set
+# Purpose: Generate pairwise constraints across multiple groups
+#          Each constraint enforces that all elements in earlier groups 
+#          precede those in later groups (i.e., partial order between groups)
+#
+# Input:
+#   - num_groups: a vector specifying the number of elements in each group
+# Output:
+#   - pc_set: a matrix of pairwise constraints, each row is a (from, to) pair
+#--------------------------------------------------------------
+pai_cons_set <- function(num_groups) {
+  m <- sum(num_groups)        # Total number of elements
+  pc_set <- NULL              # Initialize pairwise constraint set
+  
+  for (i in 1:(length(num_groups) - 1)) {
+    # Indices for current group (group i)
+    from_start <- sum(num_groups[1:i]) - num_groups[i] + 1
+    from_end <- sum(num_groups[1:i])
+    from_group <- from_start:from_end
+    
+    # Indices for all subsequent elements (group i+1 and beyond)
+    to_group <- (sum(num_groups[1:i]) + 1):m
+    
+    # Generate all combinations where elements in earlier group < later group
+    from <- rep(from_group, each = length(to_group))
+    to <- rep(to_group, times = length(from_group))
+    
+    pc_set <- rbind(pc_set, cbind(from, to))
+  }
+  
+  return(pc_set)
+}

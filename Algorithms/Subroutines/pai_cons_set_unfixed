@@ -1,0 +1,24 @@
+pai_cons_set_unfixed <- function(groups, group_order) {
+  m <- sum(sapply(1:length(group_order),function(x){length(groups[[x]])}))        # Total number of elements
+  num_group <- sapply(1:length(group_order),function(x){length(groups[[x]])})
+  pc_set <- NULL              # Initialize pairwise constraint set
+  go_set <-NULL
+  
+  for (i in 1:(length(group_order) - 1)) {
+    # Indices for current group (group i)
+    from_group <- groups[[group_order[i]]]
+    
+    # Indices for all subsequent elements (group i+1 and beyond)
+    to_group <- unlist(sapply((i+1):length(group_order),function(x){groups[[group_order[x]]]}))
+    index_del <- sapply(i:(length(group_order)-1),function(x){sum(num_group[group_order[i:x]])-sum(num_group[group_order[i]])+1})
+    
+    # Generate all combinations where elements in earlier group < later group
+    from <- rep(from_group, each = length(to_group))
+    to <- rep(to_group, times = length(from_group))
+    
+    pc_set <- rbind(pc_set, cbind(from, to)[-index_del,])
+    go_set <- rbind(go_set, cbind(from, to)[index_del,])
+  }
+  
+  return(list(pc_set=pc_set,go_set=go_set))
+}

@@ -1,1 +1,43 @@
-
+topo_sort_kahn_random <- function(edges, nodes) {
+  if (is.null(nodes)) {
+    nodes <- unique(c(edges[,1], edges[,2]))
+  }
+  
+  # Build the adjacency list and in-degree table
+  adj_list <- vector("list", length(nodes))
+  names(adj_list) <- nodes
+  in_degree <- setNames(rep(0, length(nodes)), nodes)
+  
+  for (i in 1:nrow(edges)) {
+    from <- as.character(edges[i, 1])
+    to <- as.character(edges[i, 2])
+    adj_list[[from]] <- c(adj_list[[from]], to)
+    in_degree[to] <- in_degree[to] + 1
+  }
+  
+  # Initialize the queue with nodes whose in-degree is 0
+  queue <- names(in_degree[in_degree == 0])
+  result <- character(0)
+  
+  while (length(queue) > 0) {
+    # Introduce randomness here
+    idx <- sample(length(queue), 1)
+    current <- queue[idx]
+    queue <- queue[-idx]
+    result <- c(result, current)
+    
+    for (neighbor in adj_list[[current]]) {
+      in_degree[neighbor] <- in_degree[neighbor] - 1
+      if (in_degree[neighbor] == 0) {
+        queue <- c(queue, neighbor)
+      }
+    }
+  }
+  
+  # Check whether the graph is a DAG
+  if (length(result) < length(nodes)) {
+    stop("Graph contains a cycle; topological sort not possible.")
+  }
+  
+  return(as.integer(result))
+}

@@ -102,3 +102,20 @@ result44456<-(sapply(1:40,function(x){final.out.put_44456[[x]]$dvalue})/prod((nu
 mean(result44456)
 nrow(final.out.put_44456[[1]]$design)
 mean(sapply(1:40,function(x){final.out.put_44456[[x]]$final.time}))
+
+
+#Table 1 (Case 1-13)
+round(c(mean(sapply(1:40,function(x){final.out.put_35[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_45[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_46[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_48[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_78[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_347[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_356[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_456[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_467[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_3456[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_4567[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_4568[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_44456[[x]]$final.time}))*60
+  ),3)

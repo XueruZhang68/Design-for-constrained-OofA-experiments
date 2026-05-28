@@ -1,4 +1,4 @@
-# Case Study
+# Folders
 
 ## Survey Questions
 - `Survey Questions.docx`: Questions 1--6

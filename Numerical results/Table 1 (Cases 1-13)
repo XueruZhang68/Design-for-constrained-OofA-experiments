@@ -31,11 +31,9 @@ final.out.putfig_35 <- parLapply(cl, 1:ntotal, function(x){
   return(final_design)
 })
 ...
-save.image("D:/20250730.RData")
-
 # 关闭 cluster
 stopCluster(cl)
-save.image("D:/20250730.RData")
+save.image("D:/Table 1 (Cases 1-13).RData")
 
 
 num_groups=c(3,5)

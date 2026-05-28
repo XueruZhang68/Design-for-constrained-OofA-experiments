@@ -30,6 +30,7 @@ final.out.putfig_35 <- parLapply(cl, 1:ntotal, function(x){
   final_design <- ta_kahn_random(m,cons,edges,num_runs,num_seq,num_rounds)
   return(final_design)
 })
+...
 save.image("D:/20250730.RData")
 
 # 关闭 cluster

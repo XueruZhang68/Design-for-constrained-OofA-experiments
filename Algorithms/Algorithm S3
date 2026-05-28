@@ -1,1 +1,89 @@
+ta_kahn_random_unfixed <- function(m, groups, edges,
+                                   num_runs, num_seq,
+                                   num_rounds = ceiling(num_seq / 2),
+                                   tilde_edges = NULL) {
+  
+  ta_vector <- NULL
+  k <- 0
+  ng <- length(groups)
+  if (is.null(edges)) edges <- matrix(numeric(0), 0, 2)
+  
+  # Step 2: group-order-independent constraint base C_0
+  C0 <- make_C0(groups, edges, tilde_edges)
+  
+  # === Step 1: Generate initial TA thresholds ===
+  while (k < num_seq) {                       # Step 3: exactly num_seq
+    
+    # Generate initial design
+    init_design <- t(sapply(1:num_runs, function(x) {
+      group_order <- draw_group_order(ng, tilde_edges)   ### CHANGED
+      
+      # Pairwise constraints (unfixed)
+      result_pc <- pai_cons_set_unfixed(groups, group_order)
+      
+      # C' <- C0  (Step 5)  +  add inter-group constraints (Step 7)
+      final_edges <- rbind(C0, result_pc$pc_set, result_pc$go_set)
+      final_edges <- unique(final_edges)
+      
+      # Build minimal DAG (transitive reduction) -- Step 8
+      g <- graph_from_edgelist(as.matrix(final_edges), directed = TRUE)
+      g_minimal <- transitive_reduction(g)
+      redu_edges <- as_edgelist(g_minimal)
+      storage.mode(redu_edges) <- "integer"
+      
+      # Return one random topological order -- Step 9
+      topo_sort_kahn_random(redu_edges, 1:m)
+    }))
+    
+    # Build constraint edges (temp_edges) -- proxy reparametrization
+    temp_edges <- make_temp_edges(                       ### CHANGED
+      groups, edges, draw_group_order(ng, tilde_edges), tilde_edges)
+    
+    # Calculate D-value of initial design
+    regdesign <- consregdesign(init_design, constrain = temp_edges)$regdesign
+    init_dvalue <- (det(t(regdesign) %*% regdesign / nrow(init_design)))^(1 / ncol(regdesign))
+    
+    # === Step 2: Perturb one run to generate neighbor ===
+    design <- init_design
+    idx_row <- sample(1:num_runs, 1)
+    design[idx_row, ] <- t(perturb_topo_group(design[idx_row, ], edges, groups, tilde_edges))
+    
+    regdesign <- consregdesign(design, constrain = temp_edges)$regdesign
+    dvalue <- (det(t(regdesign) %*% regdesign / nrow(design)))^(1 / ncol(regdesign))
+    
+    # Record TA distance if valid
+    if (!is.na(abs(init_dvalue - dvalue)) && init_dvalue * dvalue != 0) {
+      ta_vector <- c(ta_vector, abs(init_dvalue - dvalue))
+      k <- k + 1
+    }
+  }
+  
+  # Use lower 50% of distances as thresholds
+  ta_vector <- sort(ta_vector, decreasing = TRUE)[(num_seq - num_rounds + 1):num_seq]
+  
+  # === Step 3: TA Optimization ===
+  for (i in seq_len(num_rounds)) {
+    valid_neighbor <- FALSE
+    
+    while (!valid_neighbor) {
+      design <- init_design
+      idx_row <- sample(1:num_runs, 1)
+      design[idx_row, ] <- t(perturb_topo_group(design[idx_row, ], edges, groups, tilde_edges))
+      
+      regdesign <- consregdesign(design, constrain = temp_edges)$regdesign
+      dvalue <- (det(t(regdesign) %*% regdesign / nrow(design)))^(1 / ncol(regdesign))
+      
+      valid_neighbor <- !(is.na(dvalue) || dvalue == 0)
+    }
+    
+    if (dvalue > init_dvalue - ta_vector[i]) {
+      init_design <- design
+      init_dvalue <- dvalue
+    }
+  }
+  
+  return(list(design = init_design, dvalue = init_dvalue,
+              p = ncol(regdesign)))
+}
+
 

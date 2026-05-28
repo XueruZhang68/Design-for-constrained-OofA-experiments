@@ -1,6 +1,6 @@
 rm(list = ls())
 
-setwd("C:/Users/riosn/OneDrive/Documents/GMU/Papers in Progress/ConstrainedOOFA")
+#setwd("C:/Users/riosn/OneDrive/Documents/GMU/Papers in Progress/ConstrainedOOFA")
 
 clean_survey_data = read.csv("clean_survey_data_4162024.csv")
 
@@ -13,9 +13,10 @@ if(length(outlier_ids) == 0){
 }
 
 clean_data$duration = clean_data$Duration..in.seconds.
-
+ # 63 observations
 score_model = lm(Score ~ z12 + z34 + z35 + z36 + z46 + z56, data = clean_data)
 summary(score_model)
+
 
 
 library(dplyr)
@@ -31,8 +32,7 @@ shapiro.test(score_model2$residuals)
 ncvTest(score_model2, ~ z12 + z34 + z35 + z36 + z46 + z56)
 result.para<-cbind(result.para,summary(score_model2)$coefficients[,c(1,4)])
 }
-
-round(apply(sapply(1:10^3,function(x){result.para[,2*x-1]}),1, quantile, probs = c(0.025, 0.925), na.rm = TRUE),3)
+\round(apply(sapply(1:10^3,function(x){result.para[,2*x-1]}),1, quantile, probs = c(0.025, 0.925), na.rm = TRUE),3)
 
 set.seed(1234) 
 nn=14
@@ -53,13 +53,15 @@ result1<-t(sapply(1:10^3,function(x){result.para[,2*x]}))
 #sum(sapply(1:10^3,function(x){result.para[6,2*x]<=0.01}))
 #shapiro.test(score_model2$residuals)
 #ncvTest(score_model2, ~ z12 + z34 + z35 + z36 + z46 + z56)
+
+
+#Figure 2(a)                                                       
 par(mfrow= c(1,2),mar=c(2,2,2,2)+4,oma=c(1,1,1,1))
 boxplot(result1,ylab="p-value",ylim=c(0,1),xaxt="n",cex.main=1.3,cex.lab=1.3)
 lines(c(0,8),c(0.1,0.1),lty = 2,col="red")
 axis(1,1:7,labels=c(expression(beta[0]),expression(beta[12]), expression(beta[34]),  expression(beta[35]),expression(beta[36]),expression(beta[46]),expression(beta[56])),cex.main=1.2,cex.lab=1.2)
 title("(a) n=14",cex.main = 1.3)
                                                                                      
-
 
 set.seed(1234) 
 nn<-21
@@ -79,7 +81,7 @@ round(apply(sapply(1:10^3,function(x){result.para[,2*x-1]}),1, mean),3)
 #shapiro.test(score_model2$residuals)
 #ncvTest(score_model2, ~ z12 + z34 + z35 + z36 + z46 + z56)
 
-                                                                                        
+#Figure 2(b)                                                                                          
 result2<-t(sapply(1:10^3,function(x){result.para[,2*x]}))
 boxplot(result2,ylab="p-value",ylim=c(0,1),xaxt="n",cex.main=1.3,cex.lab=1.3)
 lines(c(0,8),c(0.1,0.1),lty = 2,col="red")

@@ -1,3 +1,4 @@
+load("Table 3 (Cases 19-27).RData")
 num_groups=c(3,5)
 g_result351<-(sapply(1:40,function(x){final.out.put_351[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2)})*100

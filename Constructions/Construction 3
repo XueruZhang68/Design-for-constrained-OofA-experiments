@@ -122,7 +122,7 @@ check_block_condition <- function(blocks, m, verbose = TRUE) {
 ## 3. Construction 3
 ## ---------------------------------------------------------
 
-construction_G11 <- function(m, ic, jc, blocks, n = NULL) {
+construction_3 <- function(m, ic, jc, blocks, n = NULL) {
   ## m: number of components
   ## ic -> jc: pairwise constraint
   ## blocks: list of blocks, each block is a vector of labels
@@ -279,36 +279,36 @@ blocks <- combn(seq_len(m), 2, simplify = FALSE)
 block_check <- check_block_condition(blocks, m)
 print(block_check$ok)
 
-## Apply Construction G11
-D_G11 <- construction_G11(
+## Apply Construction 3
+D_3 <- construction_3(
   m = m,
   ic = ic,
   jc = jc,
   blocks = blocks
 )
 
-cat("Dimension of D_G11:\n")
-print(dim(D_G11))
+cat("Dimension of D_3:\n")
+print(dim(D_3))
 
 cat("All rows satisfy the constraint 1 -> 2:\n")
-print(is_feasible_constraint(D_G11, ic, jc))
+print(is_feasible_constraint(D_3, ic, jc))
 
 ## Full constrained design
 D_full <- make_full_constrained_design(m, ic, jc)
 
 ## Compare normalized information matrices
-M_D <- norm_info(D_G11, m, ic, jc)
+M_D <- norm_info(D_3, m, ic, jc)
 M_F <- norm_info(D_full, m, ic, jc)
 
 max_diff <- max(abs(M_D - M_F))
 D_eff_value <- D_eff(M_D, M_F)
 
 cat("\nVerification results:\n")
-cat("Run size of constructed design n =", nrow(D_G11), "\n")
+cat("Run size of constructed design n =", nrow(D_3), "\n")
 cat("Run size of full constrained design N =", nrow(D_full), "\n")
 cat("Number of parameters p =", ncol(M_D), "\n")
 cat("max |M_D - M_F| =", max_diff, "\n")
 cat("D_eff =", D_eff_value, "\n")
 
 ## Optional: inspect the first rows
-head(D_G11)
+head(D_3)

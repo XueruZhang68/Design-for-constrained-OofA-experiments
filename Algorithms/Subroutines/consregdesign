@@ -1,0 +1,51 @@
+consregdesign<-function(design,gdesign,constrain,ng){
+  d<-ncol(design)
+  if(is.vector(constrain)){
+    colnames<-matrix(0,d*(d-1)/2-1,2)
+    k<-0
+    for(i in 1:(d-1)){
+      for (j in (i+1):d) {
+        if((i!=sort(constrain)[1])|(j!=sort(constrain)[2])){
+          k<-k+1
+          colnames[k,]<-c(i,j)
+        }
+      }
+    }
+  }else{
+    colnames<-matrix(0,d*(d-1)/2-nrow(constrain),2)
+    k<-0
+    for(i in 1:(d-1)){
+      for (j in (i+1):d) {
+        if(length(which(duplicated(rbind(c(i,j),c(j,i),constrain))==T))==0){
+          k<-k+1
+          colnames[k,]<-c(i,j)
+        }
+      }
+    }
+  }
+  regdesign<-matrix(0,nrow(design),k+ng*(ng-1)/2)
+  ccc=combn(1:ng,2)
+  for (i in 1:nrow(gdesign)) {
+    for (j in 1:(ng*(ng-1)/2)) {
+      if(which(gdesign[i,]==ccc[1,j])<which(gdesign[i,]==ccc[2,j])){
+        regdesign[i,j]<-1
+      }else{
+        regdesign[i,j]<--1
+      }
+    }
+  }
+  
+  for (i in 1:nrow(design)) {
+    for (j in 1:k) {
+      if(which(design[i,]==colnames[j,1])<which(design[i,]==colnames[j,2])){
+        regdesign[i,ng*(ng-1)/2+j]<-1
+      }else{
+        regdesign[i,ng*(ng-1)/2+j]<--1
+      }
+    }
+  }
+  regdesign<-cbind(rep(1,nrow(design)),regdesign[,-1])
+  colnames<-rbind(c(0,0),colnames)
+  
+  return(list("colnames"=colnames,"regdesign"=regdesign))
+}

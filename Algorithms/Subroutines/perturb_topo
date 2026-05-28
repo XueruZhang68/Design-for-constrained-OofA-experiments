@@ -1,0 +1,21 @@
+perturb_topo <- function(seq, edges) {
+  n <- length(seq)
+  attempt <- 0
+  swapped <- FALSE
+  
+  while (!swapped) {
+    attempt <- attempt + 1
+    idx <- sample(1:(n - 1), 1)
+    a <- seq[idx]
+    b <- seq[idx + 1]
+    
+    # If b does not depend on a, swap them
+    if (!any(edges[, 1] == a & edges[, 2] == b)) {
+      seq[c(idx, idx + 1)] <- c(b, a)
+      swapped <- TRUE
+    }
+  }
+  
+  if (!swapped) warning("No valid swap performed after max attempts.")
+  return(seq)
+}

@@ -65,7 +65,7 @@ check_OA_strength2 <- function(OA, levels_vec) {
 ## 2. Build group-level D_k for Construction S1
 ## ---------------------------------------------------------
 
-make_Dk_G22 <- function(G, constraint = NULL, D_uncon_local = NULL, D_con_local = NULL) {
+make_Dk_S1 <- function(G, constraint = NULL, D_uncon_local = NULL, D_con_local = NULL) {
   ## G: global labels in one group, e.g., c(1,2,3)
   ## constraint: c(ic, jc) in global labels, or NULL
   ## D_uncon_local: OofA-OA on local labels 1,...,|G|, if no constraint
@@ -108,7 +108,7 @@ make_Dk_G22 <- function(G, constraint = NULL, D_uncon_local = NULL, D_con_local 
 ## 3. Construction S1
 ## ---------------------------------------------------------
 
-construction_G22 <- function(groups, constraints, D_uncon_local_list, D_con_local_list, OA) {
+construction_S1 <- function(groups, constraints, D_uncon_local_list, D_con_local_list, OA) {
   ## groups: list of global component labels
   ## constraints: list; each element is either NULL or c(ic,jc)
   ## D_uncon_local_list: unconstrained local designs for groups without constraint
@@ -121,7 +121,7 @@ construction_G22 <- function(groups, constraints, D_uncon_local_list, D_con_loca
   D_list <- vector("list", ntilde)
   
   for (k in seq_len(ntilde)) {
-    D_list[[k]] <- make_Dk_G22(
+    D_list[[k]] <- make_Dk_S1(
       G = groups[[k]],
       constraint = constraints[[k]],
       D_uncon_local = D_uncon_local_list[[k]],
@@ -298,7 +298,7 @@ cat("Check OA(36;3^1 12^1;2):\n")
 print(check_OA_strength2(OA_36_3_12, c(3, 12)))
 
 ## Apply Construction S1
-out <- construction_G22(
+out <- construction_S1(
   groups = groups,
   constraints = constraints,
   D_uncon_local_list = D_uncon_local_list,
@@ -306,14 +306,14 @@ out <- construction_G22(
   OA = OA_36_3_12
 )
 
-D_G22 <- out$D
+D_S1 <- out$D
 D_list <- out$D_list
 
 cat("Dimensions of group-level designs D_k:\n")
 print(lapply(D_list, dim))
 
-cat("Dimension of final design D_G22:\n")
-print(dim(D_G22))
+cat("Dimension of final design D_S1:\n")
+print(dim(D_S1))
 
 ## ---------------------------------------------------------
 ## 7. Verify information-matrix equality
@@ -321,14 +321,14 @@ print(dim(D_G22))
 
 D_full <- make_full_fixed_group_constrained(groups, constraints)
 
-M_D <- norm_info(D_G22, groups, constraints)
+M_D <- norm_info(D_S1, groups, constraints)
 M_F <- norm_info(D_full, groups, constraints)
 
 max_diff <- max(abs(M_D - M_F))
 D_eff_value <- D_eff(M_D, M_F)
 
 cat("\nVerification results for Construction S1:\n")
-cat("Run size of constructed design n =", nrow(D_G22), "\n")
+cat("Run size of constructed design n =", nrow(D_S1), "\n")
 cat("Run size of full constrained design N =", nrow(D_full), "\n")
 cat("Number of parameters p =", ncol(M_D), "\n")
 cat("max |M_D - M_F| =", max_diff, "\n")

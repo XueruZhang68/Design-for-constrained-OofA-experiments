@@ -1,1 +1,25 @@
-
+# Transitive reduction function: takes a graph g as input and returns
+# the transitively reduced graph (with the minimum number of edges)
+transitive_reduction <- function(g) {
+  redundant_edges <- c()
+  
+  # Iterate over each edge and check whether it can be reached indirectly
+  # through another path (if so, the edge is redundant)
+  for (e in E(g)) {
+    from <- ends(g, e)[1]
+    to <- ends(g, e)[2]
+    
+    # Create a temporary graph with the current edge removed
+    g_temp <- delete_edges(g, e)
+    
+    # If a path from `from` to `to` still exists after removing this edge,
+    # then the edge is redundant
+    if (suppressWarnings(lengths(shortest_paths(g_temp, from, to)$vpath) > 0)) {
+      redundant_edges <- c(redundant_edges, e)
+    }
+  }
+  
+  # Remove all redundant edges
+  g_reduced <- delete_edges(g, redundant_edges)
+  return(g_reduced)
+}

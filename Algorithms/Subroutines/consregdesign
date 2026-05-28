@@ -1,3 +1,4 @@
+#generate the regression matrix of a  design with specific constrains
 consregdesign<-function(design,gdesign,constrain,ng){
   d<-ncol(design)
   if(is.vector(constrain)){

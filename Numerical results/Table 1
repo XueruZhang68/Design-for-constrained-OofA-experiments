@@ -1,1 +1,103 @@
+n_cores <- 24
 
+#  cluster
+cl <- makeCluster(n_cores)
+clusterEvalQ(cl, {
+  library(gtools)
+  library(igraph)
+  load("D:/consdesign.R")
+  load("D:/consregdesign.R")
+  load("D:/pai_cons_set.R")
+  load("D:/perturb_topo.R")
+  load("D:/ta_kahn_random.R")
+  load("D:/topo_sort_kahn_random.R")
+  load("D:/transitive_reduction.R")
+})
+#setups
+num_groups <- c(3,5)
+m <- sum(num_groups)
+edges <- pai_cons_set(num_groups)
+g <- graph_from_edgelist(edges, directed = TRUE)
+g_minimal <- transitive_reduction(g) # 传递规约
+cons <-as_edgelist(g_minimal)  # 输出最小边集合 
+num_runs <- sum(num_groups*(num_groups-1)/2)+1
+num_seq <- 2000
+num_rounds <- num_seq /2
+ntotal <- 100
+# parallel 
+final.out.putfig_35 <- parLapply(cl, 1:ntotal, function(x){
+  set.seed(x)
+  final_design <- ta_kahn_random(m,cons,edges,num_runs,num_seq,num_rounds)
+  return(final_design)
+})
+save.image("D:/20250730.RData")
+
+# 关闭 cluster
+stopCluster(cl)
+save.image("D:/20250730.RData")
+
+par(mfrow= c(1,2),mar=c(2,2,2,2)+3,oma=c(1,1,1,1)-1)
+
+num_groups=c(3,5)
+result35<-(sapply(1:40,function(x){final.out.put_35[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result35)
+nrow(final.out.put_35[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_35[[x]]$final.time}))
+num_groups=c(4,5)
+result45<-(sapply(1:40,function(x){final.out.put_45[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result45)
+nrow(final.out.put_45[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_45[[x]]$final.time}))
+num_groups=c(4,6)
+result46<-(sapply(1:40,function(x){final.out.put_46[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result46)
+nrow(final.out.put_46[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_46[[x]]$final.time}))
+num_groups=c(4,8)
+result48<-(sapply(1:40,function(x){final.out.put_48[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result48)
+nrow(final.out.put_48[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_48[[x]]$final.time}))
+num_groups=c(7,8)
+result78<-(sapply(1:40,function(x){final.out.put_78[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result78)
+nrow(final.out.put_78[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_78[[x]]$final.time}))
+num_groups=c(3,4,7)
+result347<-(sapply(1:40,function(x){final.out.put_347[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result347)
+nrow(final.out.put_347[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_347[[x]]$final.time}))
+num_groups=c(3,5,6)
+result356<-(sapply(1:40,function(x){final.out.put_356[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result356)
+nrow(final.out.put_356[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_356[[x]]$final.time}))
+num_groups=c(4,5,6)
+result456<-(sapply(1:40,function(x){final.out.put_456[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result456)
+nrow(final.out.put_456[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_456[[x]]$final.time}))
+num_groups=c(4,6,7)
+result467<-(sapply(1:40,function(x){final.out.put_467[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result467)
+nrow(final.out.put_467[[1]]$design)
+num_groups=c(3,4,5,6)
+result3456<-(sapply(1:40,function(x){final.out.put_3456[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result3456)
+nrow(final.out.put_3456[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_3456[[x]]$final.time}))
+num_groups=c(4,5,6,7)
+result4567<-(sapply(1:40,function(x){final.out.put_4567[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result4567)
+nrow(final.out.put_4567[[1]]$design)
+num_groups=c(4,5,6,8)
+result4568<-(sapply(1:40,function(x){final.out.put_4568[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result4568)
+nrow(final.out.put_4568[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_4568[[x]]$final.time}))
+num_groups=c(4,4,4,5,6)
+result44456<-(sapply(1:40,function(x){final.out.put_44456[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
+mean(result44456)
+nrow(final.out.put_44456[[1]]$design)
+mean(sapply(1:40,function(x){final.out.put_44456[[x]]$final.time}))

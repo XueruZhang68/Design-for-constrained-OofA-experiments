@@ -1,4 +1,4 @@
-# Folders
+# Documents
 
 ## Survey Questions
 - `Survey Questions.docx`: Questions 1--6

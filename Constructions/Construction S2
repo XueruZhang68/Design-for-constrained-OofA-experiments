@@ -1,1 +1,471 @@
+############################################################
+## Construction S2
+## Free group order with intra-group pairwise constraints
+## and optional group-pairwise constraint
+############################################################
 
+## ---------------------------------------------------------
+## 1. Basic utilities
+## ---------------------------------------------------------
+
+all_perms <- function(x) {
+  if (length(x) == 1) return(matrix(x, nrow = 1))
+  
+  out <- list()
+  idx <- 1
+  for (i in seq_along(x)) {
+    sub <- all_perms(x[-i])
+    out[[idx]] <- cbind(x[i], sub)
+    idx <- idx + 1
+  }
+  do.call(rbind, out)
+}
+
+make_constrained_full <- function(labels, ic, jc) {
+  D0 <- all_perms(labels)
+  keep <- apply(D0, 1, function(row) {
+    which(row == ic) < which(row == jc)
+  })
+  D0[keep, , drop = FALSE]
+}
+
+relabel_design <- function(D_local, map_vec) {
+  D_global <- D_local
+  for (a in seq_along(map_vec)) {
+    D_global[D_local == a] <- map_vec[a]
+  }
+  D_global
+}
+
+check_OA_strength2 <- function(OA, levels_vec) {
+  q <- ncol(OA)
+  ok <- TRUE
+  
+  for (a in 1:(q - 1)) {
+    for (b in (a + 1):q) {
+      tab <- table(
+        factor(OA[, a], levels = 1:levels_vec[a]),
+        factor(OA[, b], levels = 1:levels_vec[b])
+      )
+      target <- nrow(OA) / (levels_vec[a] * levels_vec[b])
+      
+      if (!all(tab == target)) {
+        ok <- FALSE
+        cat("Failed OA columns:", a, b, "\n")
+        print(tab)
+      }
+    }
+  }
+  ok
+}
+
+## ---------------------------------------------------------
+## 2. Generate group-level D_k, as in Construction G22 Step 2
+## ---------------------------------------------------------
+
+make_Dk_G22 <- function(G, constraint = NULL,
+                        D_uncon_local = NULL,
+                        D_con_local = NULL) {
+  q <- length(G)
+  
+  if (!is.null(constraint)) {
+    ic <- constraint[1]
+    jc <- constraint[2]
+    
+    if (!(ic %in% G && jc %in% G)) {
+      stop("The intra-group constraint must involve two components in G.")
+    }
+    
+    remaining <- sort(setdiff(G, c(ic, jc)))
+    map_vec <- c(ic, jc, remaining)
+    
+    ## Local constrained design on 1,...,q with local constraint 1 -> 2.
+    ## Replace this by a smaller COofA-OA if available.
+    if (is.null(D_con_local)) {
+      D_con_local <- make_constrained_full(seq_len(q), 1, 2)
+    }
+    
+    Dk <- relabel_design(D_con_local, map_vec)
+    
+  } else {
+    ## Local unconstrained OofA-OA on 1,...,q.
+    ## Replace this by a smaller OofA-OA if available.
+    if (is.null(D_uncon_local)) {
+      D_uncon_local <- all_perms(seq_len(q))
+    }
+    
+    map_vec <- sort(G)
+    Dk <- relabel_design(D_uncon_local, map_vec)
+  }
+  
+  Dk
+}
+
+make_D_list_G22_step2 <- function(groups, constraints,
+                                  D_uncon_local_list,
+                                  D_con_local_list) {
+  ntilde <- length(groups)
+  D_list <- vector("list", ntilde)
+  
+  for (k in seq_len(ntilde)) {
+    D_list[[k]] <- make_Dk_G22(
+      G = groups[[k]],
+      constraint = constraints[[k]],
+      D_uncon_local = D_uncon_local_list[[k]],
+      D_con_local = D_con_local_list[[k]]
+    )
+  }
+  
+  D_list
+}
+
+## ---------------------------------------------------------
+## 3. Generate group-level design Dtilde
+## ---------------------------------------------------------
+
+make_Dtilde_S2 <- function(ntilde, group_constraint = NULL,
+                            Dtilde_uncon = NULL,
+                            Dtilde_con = NULL) {
+  ## group_constraint is NULL or c(tilde_ic, tilde_jc)
+  
+  if (is.null(group_constraint)) {
+    if (is.null(Dtilde_uncon)) {
+      Dtilde <- all_perms(seq_len(ntilde))
+    } else {
+      Dtilde <- Dtilde_uncon
+    }
+  } else {
+    tic <- group_constraint[1]
+    tjc <- group_constraint[2]
+    
+    remaining <- sort(setdiff(seq_len(ntilde), c(tic, tjc)))
+    map_vec <- c(tic, tjc, remaining)
+    
+    ## Local constrained group design on 1,...,ntilde with 1 -> 2.
+    ## Replace this by a smaller COofA-OA if available.
+    if (is.null(Dtilde_con)) {
+      Dtilde_con <- make_constrained_full(seq_len(ntilde), 1, 2)
+    }
+    
+    Dtilde <- relabel_design(Dtilde_con, map_vec)
+  }
+  
+  Dtilde
+}
+
+## ---------------------------------------------------------
+## 4. Construction S2
+## ---------------------------------------------------------
+
+construction_S2 <- function(groups, constraints,
+                             group_constraint = NULL,
+                             D_uncon_local_list,
+                             D_con_local_list,
+                             Dtilde_uncon = NULL,
+                             Dtilde_con = NULL,
+                             OA) {
+  ntilde <- length(groups)
+  
+  ## Step 2: obtain D_1,...,D_ntilde
+  D_list <- make_D_list_G22_step2(
+    groups = groups,
+    constraints = constraints,
+    D_uncon_local_list = D_uncon_local_list,
+    D_con_local_list = D_con_local_list
+  )
+  
+  ## Step 3: obtain Dtilde on group indices
+  Dtilde <- make_Dtilde_S2(
+    ntilde = ntilde,
+    group_constraint = group_constraint,
+    Dtilde_uncon = Dtilde_uncon,
+    Dtilde_con = Dtilde_con
+  )
+  
+  ## Step 4: apply the assembly rule of Construction G2
+  n_OA <- nrow(OA)
+  m <- sum(sapply(groups, length))
+  
+  if (ncol(OA) != ntilde + 1) {
+    stop("OA must have ntilde + 1 columns: r0, r1, ..., r_ntilde.")
+  }
+  
+  D <- matrix(NA, nrow = n_OA, ncol = m)
+  
+  for (r in seq_len(n_OA)) {
+    r0 <- OA[r, 1]
+    group_order <- Dtilde[r0, ]
+    
+    selected_rows <- vector("list", ntilde)
+    for (k in seq_len(ntilde)) {
+      rk <- OA[r, k + 1]
+      selected_rows[[k]] <- D_list[[k]][rk, ]
+    }
+    
+    row_vec <- c()
+    for (pos in seq_len(ntilde)) {
+      g_id <- group_order[pos]
+      row_vec <- c(row_vec, selected_rows[[g_id]])
+    }
+    
+    D[r, ] <- row_vec
+  }
+  
+  list(D = D, D_list = D_list, Dtilde = Dtilde)
+}
+
+## ---------------------------------------------------------
+## 5. Model matrix for S2
+## ---------------------------------------------------------
+
+make_X_S2 <- function(D, groups, constraints, group_constraint = NULL) {
+  ## Intercept + intra-group PWO factors excluding constrained pairs
+  ## + group-order PWO factors excluding constrained group pair if present.
+  
+  n <- nrow(D)
+  X <- matrix(1, nrow = n, ncol = 1)
+  col_names <- "Intercept"
+  
+  constrained_pairs <- list()
+  for (cc in constraints) {
+    if (!is.null(cc)) {
+      constrained_pairs[[length(constrained_pairs) + 1]] <- sort(cc)
+    }
+  }
+  
+  is_constrained_component_pair <- function(i, j) {
+    pair <- sort(c(i, j))
+    any(sapply(constrained_pairs, function(cc) all(cc == pair)))
+  }
+  
+  ## Intra-group PWO factors
+  for (g in groups) {
+    if (length(g) >= 2) {
+      pairs <- t(combn(g, 2))
+      
+      for (a in seq_len(nrow(pairs))) {
+        i <- pairs[a, 1]
+        j <- pairs[a, 2]
+        
+        if (is_constrained_component_pair(i, j)) next
+        
+        z <- numeric(n)
+        for (r in seq_len(n)) {
+          pos_i <- which(D[r, ] == i)
+          pos_j <- which(D[r, ] == j)
+          z[r] <- ifelse(pos_i < pos_j, 1, -1)
+        }
+        
+        X <- cbind(X, z)
+        col_names <- c(col_names, paste0("I", i, j))
+      }
+    }
+  }
+  
+  ## Group-order PWO factors
+  ntilde <- length(groups)
+  if (ntilde >= 2) {
+    group_pairs <- t(combn(seq_len(ntilde), 2))
+    
+    for (a in seq_len(nrow(group_pairs))) {
+      g1 <- group_pairs[a, 1]
+      g2 <- group_pairs[a, 2]
+      
+      if (!is.null(group_constraint)) {
+        if (all(sort(c(g1, g2)) == sort(group_constraint))) next
+      }
+      
+      z <- numeric(n)
+      for (r in seq_len(n)) {
+        pos_g1 <- which(D[r, ] %in% groups[[g1]])
+        pos_g2 <- which(D[r, ] %in% groups[[g2]])
+        z[r] <- ifelse(max(pos_g1) < min(pos_g2), 1, -1)
+      }
+      
+      X <- cbind(X, z)
+      col_names <- c(col_names, paste0("G", g1, "G", g2))
+    }
+  }
+  
+  colnames(X) <- col_names
+  X
+}
+
+norm_info_S2 <- function(D, groups, constraints, group_constraint = NULL) {
+  X <- make_X_S2(D, groups, constraints, group_constraint)
+  crossprod(X) / nrow(X)
+}
+
+D_eff <- function(MD, MF) {
+  p <- ncol(MD)
+  logdet_MD <- determinant(MD, logarithm = TRUE)$modulus[1]
+  logdet_MF <- determinant(MF, logarithm = TRUE)$modulus[1]
+  as.numeric(exp((logdet_MD - logdet_MF) / p))
+}
+
+## ---------------------------------------------------------
+## 6. Full design for S2
+## ---------------------------------------------------------
+
+make_full_S2 <- function(groups, constraints, group_constraint = NULL) {
+  ntilde <- length(groups)
+  
+  ## Within-group feasible permutations
+  P_list <- vector("list", ntilde)
+  for (k in seq_len(ntilde)) {
+    G <- groups[[k]]
+    cc <- constraints[[k]]
+    
+    if (is.null(cc)) {
+      P_list[[k]] <- all_perms(G)
+    } else {
+      P_list[[k]] <- make_constrained_full(G, cc[1], cc[2])
+    }
+  }
+  
+  ## Feasible group orders
+  if (is.null(group_constraint)) {
+    group_orders <- all_perms(seq_len(ntilde))
+  } else {
+    group_orders <- make_constrained_full(seq_len(ntilde),
+                                          group_constraint[1],
+                                          group_constraint[2])
+  }
+  
+  within_grid <- expand.grid(lapply(P_list, function(P) seq_len(nrow(P))))
+  
+  D_full_list <- list()
+  idx <- 1
+  
+  for (go_r in seq_len(nrow(group_orders))) {
+    group_order <- group_orders[go_r, ]
+    
+    for (r in seq_len(nrow(within_grid))) {
+      row_vec <- c()
+      
+      for (pos in seq_len(ntilde)) {
+        g_id <- group_order[pos]
+        row_index <- within_grid[r, g_id]
+        row_vec <- c(row_vec, P_list[[g_id]][row_index, ])
+      }
+      
+      D_full_list[[idx]] <- row_vec
+      idx <- idx + 1
+    }
+  }
+  
+  do.call(rbind, D_full_list)
+}
+
+## ---------------------------------------------------------
+## 7. Example: Table tt1 Case 19
+## ---------------------------------------------------------
+
+groups <- list(
+  G1 = 1:3,
+  G2 = 4:8
+)
+
+## Intra-group constraint: 1 -> 2 in G1
+constraints <- list(
+  c(1, 2),
+  NULL
+)
+
+## No group-pairwise constraint for case 19
+group_constraint <- NULL
+
+## Local constrained design for G1:
+## COofA-OA on local labels 1,2,3 with 1 -> 2
+D1_con_local <- make_constrained_full(1:3, 1, 2)
+
+## Local OofA-OA(12,5) for G2 on local labels 1,...,5
+D2_uncon_local <- rbind(
+  c(1, 2, 4, 5, 3),
+  c(1, 3, 4, 5, 2),
+  c(2, 1, 5, 3, 4),
+  c(2, 3, 5, 1, 4),
+  c(3, 1, 5, 2, 4),
+  c(3, 2, 4, 5, 1),
+  c(4, 1, 2, 3, 5),
+  c(4, 3, 2, 1, 5),
+  c(4, 5, 2, 3, 1),
+  c(5, 1, 4, 3, 2),
+  c(5, 2, 4, 1, 3),
+  c(5, 3, 4, 1, 2)
+)
+
+D_uncon_local_list <- list(
+  NULL,
+  D2_uncon_local
+)
+
+D_con_local_list <- list(
+  D1_con_local,
+  NULL
+)
+
+## Dtilde: unconstrained OofA-OA(2,2) on group indices
+Dtilde_uncon <- rbind(
+  c(1, 2),
+  c(2, 1)
+)
+
+## OA(72;2^1 3^1 12^1;2)
+## columns: r0 for Dtilde, r1 for D1, r2 for D2
+grid_3_12 <- expand.grid(
+  r1 = 1:3,
+  r2 = 1:12
+)
+
+OA_72_2_3_12 <- cbind(
+  r0 = ((grid_3_12$r1 - 1 + grid_3_12$r2 - 1) %% 2) + 1,
+  r1 = grid_3_12$r1,
+  r2 = grid_3_12$r2
+)
+
+cat("Check OA(72;2^1 3^1 12^1;2):\n")
+print(check_OA_strength2(OA_72_2_3_12, c(2, 3, 12)))
+
+## Apply Construction S2
+out <- construction_S2(
+  groups = groups,
+  constraints = constraints,
+  group_constraint = group_constraint,
+  D_uncon_local_list = D_uncon_local_list,
+  D_con_local_list = D_con_local_list,
+  Dtilde_uncon = Dtilde_uncon,
+  Dtilde_con = NULL,
+  OA = OA_72_2_3_12
+)
+
+D_S2 <- out$D
+
+cat("Dimensions of group-level designs D_k:\n")
+print(lapply(out$D_list, dim))
+
+cat("Dimension of group-level design Dtilde:\n")
+print(dim(out$Dtilde))
+
+cat("Dimension of final design D_S2:\n")
+print(dim(D_S2))
+
+## Verify against full design
+D_full <- make_full_S2(
+  groups = groups,
+  constraints = constraints,
+  group_constraint = group_constraint
+)
+
+M_D <- norm_info_S2(D_S2, groups, constraints, group_constraint)
+M_F <- norm_info_S2(D_full, groups, constraints, group_constraint)
+
+max_diff <- max(abs(M_D - M_F))
+D_eff_value <- D_eff(M_D, M_F)
+
+cat("\nVerification results for Construction S2:\n")
+cat("Run size of constructed design n =", nrow(D_S2), "\n")
+cat("Run size of full constrained design N =", nrow(D_full), "\n")
+cat("Number of parameters p =", ncol(M_D), "\n")
+cat("max |M_D - M_F| =", max_diff, "\n")
+cat("D_eff =", D_eff_value, "\n")

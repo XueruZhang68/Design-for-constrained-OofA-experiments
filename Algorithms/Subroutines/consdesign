@@ -1,0 +1,27 @@
+#generate a full design with specific constrains
+consdesign<-function(design,constrain){
+  if(is.vector(constrain)){
+    index<-c()
+    for (i in 1:nrow(design)) {
+      if(which(design[i,]==constrain[1])<which(design[i,]==constrain[2])){
+        index<-c(index,i)
+      }
+    }
+    return(design[index,])
+  }else{
+    index<-c()
+    for (i in 1:nrow(design)) {
+      judge<-T
+      for (j in 1:nrow(constrain)) {
+        if(which(design[i,]==constrain[j,1])>which(design[i,]==constrain[j,2])){
+          judge<-F
+          break
+        }
+      }
+      if(judge==T){
+        index<-c(index,i)
+      }
+    }
+    return(design[index,])
+  }
+}

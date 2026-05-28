@@ -1,0 +1,21 @@
+#--------------------------------------------------------------
+# make_C0 : build the group-order-INDEPENDENT component-level
+# constraint base C_0  (Step 2 of Algorithm S3).
+#   (a) the intra-group constraints (the user-supplied `edges`)
+#   (b) if partially fixed (tilde_edges given): ALL cross-group
+#       component pairs induced by the fixed group pair
+#       G_gi -> G_gj, whose relative order is fixed regardless
+#       of the group order.
+#--------------------------------------------------------------
+make_C0 <- function(groups, edges, tilde_edges = NULL) {
+  C0 <- edges
+  if (is.null(C0)) C0 <- matrix(numeric(0), 0, 2)
+  if (!is.null(tilde_edges)) {
+    gi <- tilde_edges[1]; gj <- tilde_edges[2]
+    induced <- as.matrix(expand.grid(from = groups[[gi]],
+                                     to   = groups[[gj]]))
+    induced <- matrix(as.integer(induced), ncol = 2)
+    C0 <- rbind(C0, induced)
+  }
+  C0
+}

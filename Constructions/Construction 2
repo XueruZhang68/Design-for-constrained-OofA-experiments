@@ -197,7 +197,7 @@ make_full_free_group_design <- function(groups) {
 }
 
 ## ---------------------------------------------------------
-## 5. Example: Table 1, Case 14
+## 5. Example:  m = 8, groups = (3,5)
 ## ---------------------------------------------------------
 
 groups <- list(

@@ -104,7 +104,7 @@ nrow(final.out.put_44456[[1]]$design)
 mean(sapply(1:40,function(x){final.out.put_44456[[x]]$final.time}))
 
 
-#Table 1 (Case 1-13)
+#Table 1 (Cases 1-13)
 round(c(mean(sapply(1:40,function(x){final.out.put_35[[x]]$final.time})),
   mean(sapply(1:40,function(x){final.out.put_45[[x]]$final.time})),
   mean(sapply(1:40,function(x){final.out.put_46[[x]]$final.time})),

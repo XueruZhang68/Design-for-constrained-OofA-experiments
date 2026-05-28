@@ -1,43 +1,335 @@
-topo_sort_kahn_random <- function(edges, nodes) {
-  if (is.null(nodes)) {
-    nodes <- unique(c(edges[,1], edges[,2]))
+############################################################
+## Construction S1
+############################################################
+
+## ---------------------------------------------------------
+## 1. Basic utilities
+## ---------------------------------------------------------
+
+all_perms <- function(x) {
+  if (length(x) == 1) return(matrix(x, nrow = 1))
+  
+  out <- list()
+  idx <- 1
+  for (i in seq_along(x)) {
+    sub <- all_perms(x[-i])
+    out[[idx]] <- cbind(x[i], sub)
+    idx <- idx + 1
   }
-  
-  # Build the adjacency list and in-degree table
-  adj_list <- vector("list", length(nodes))
-  names(adj_list) <- nodes
-  in_degree <- setNames(rep(0, length(nodes)), nodes)
-  
-  for (i in 1:nrow(edges)) {
-    from <- as.character(edges[i, 1])
-    to <- as.character(edges[i, 2])
-    adj_list[[from]] <- c(adj_list[[from]], to)
-    in_degree[to] <- in_degree[to] + 1
+  do.call(rbind, out)
+}
+
+## Full constrained OofA design on labels, satisfying ic -> jc
+make_constrained_full <- function(labels, ic, jc) {
+  D0 <- all_perms(labels)
+  keep <- apply(D0, 1, function(row) {
+    which(row == ic) < which(row == jc)
+  })
+  D0[keep, , drop = FALSE]
+}
+
+## Relabel a local design with labels 1,...,q to global labels
+relabel_design <- function(D_local, map_vec) {
+  D_global <- D_local
+  for (a in seq_along(map_vec)) {
+    D_global[D_local == a] <- map_vec[a]
   }
+  D_global
+}
+
+## Check strength-two mixed-level OA
+check_OA_strength2 <- function(OA, levels_vec) {
+  q <- ncol(OA)
+  ok <- TRUE
   
-  # Initialize the queue with nodes whose in-degree is 0
-  queue <- names(in_degree[in_degree == 0])
-  result <- character(0)
-  
-  while (length(queue) > 0) {
-    # Introduce randomness here
-    idx <- sample(length(queue), 1)
-    current <- queue[idx]
-    queue <- queue[-idx]
-    result <- c(result, current)
-    
-    for (neighbor in adj_list[[current]]) {
-      in_degree[neighbor] <- in_degree[neighbor] - 1
-      if (in_degree[neighbor] == 0) {
-        queue <- c(queue, neighbor)
+  for (a in 1:(q - 1)) {
+    for (b in (a + 1):q) {
+      tab <- table(
+        factor(OA[, a], levels = 1:levels_vec[a]),
+        factor(OA[, b], levels = 1:levels_vec[b])
+      )
+      target <- nrow(OA) / (levels_vec[a] * levels_vec[b])
+      
+      if (!all(tab == target)) {
+        ok <- FALSE
+        cat("Failed OA columns:", a, b, "\n")
+        print(tab)
       }
     }
   }
   
-  # Check whether the graph is a DAG
-  if (length(result) < length(nodes)) {
-    stop("Graph contains a cycle; topological sort not possible.")
+  ok
+}
+
+## ---------------------------------------------------------
+## 2. Build group-level D_k for Construction S1
+## ---------------------------------------------------------
+
+make_Dk_G22 <- function(G, constraint = NULL, D_uncon_local = NULL, D_con_local = NULL) {
+  ## G: global labels in one group, e.g., c(1,2,3)
+  ## constraint: c(ic, jc) in global labels, or NULL
+  ## D_uncon_local: OofA-OA on local labels 1,...,|G|, if no constraint
+  ## D_con_local: COofA-OA on local labels 1,...,|G| with 1 -> 2, if constraint exists
+  
+  q <- length(G)
+  
+  if (!is.null(constraint)) {
+    ic <- constraint[1]
+    jc <- constraint[2]
+    
+    if (!(ic %in% G && jc %in% G)) {
+      stop("The intra-group constraint must involve two components in G.")
+    }
+    
+    remaining <- sort(setdiff(G, c(ic, jc)))
+    map_vec <- c(ic, jc, remaining)
+    
+    ## If no local constrained design is supplied, use the full constrained design
+    ## on local labels 1,...,q with 1 -> 2.
+    if (is.null(D_con_local)) {
+      D_con_local <- make_constrained_full(seq_len(q), 1, 2)
+    }
+    
+    Dk <- relabel_design(D_con_local, map_vec)
+  } else {
+    ## If no local unconstrained OofA-OA is supplied, use the full OofA design.
+    if (is.null(D_uncon_local)) {
+      D_uncon_local <- all_perms(seq_len(q))
+    }
+    
+    map_vec <- sort(G)
+    Dk <- relabel_design(D_uncon_local, map_vec)
   }
   
-  return(as.integer(result))
+  Dk
 }
+
+## ---------------------------------------------------------
+## 3. Construction S1
+## ---------------------------------------------------------
+
+construction_G22 <- function(groups, constraints, D_uncon_local_list, D_con_local_list, OA) {
+  ## groups: list of global component labels
+  ## constraints: list; each element is either NULL or c(ic,jc)
+  ## D_uncon_local_list: unconstrained local designs for groups without constraint
+  ## D_con_local_list: constrained local designs for groups with constraint
+  ## OA: strength-two OA with columns indexing rows of D_1,...,D_ntilde
+  
+  ntilde <- length(groups)
+  if (length(constraints) != ntilde) stop("constraints must have length ntilde.")
+  
+  D_list <- vector("list", ntilde)
+  
+  for (k in seq_len(ntilde)) {
+    D_list[[k]] <- make_Dk_G22(
+      G = groups[[k]],
+      constraint = constraints[[k]],
+      D_uncon_local = D_uncon_local_list[[k]],
+      D_con_local = D_con_local_list[[k]]
+    )
+  }
+  
+  n_OA <- nrow(OA)
+  m <- sum(sapply(groups, length))
+  D <- matrix(NA, nrow = n_OA, ncol = m)
+  
+  for (r in seq_len(n_OA)) {
+    row_vec <- c()
+    for (k in seq_len(ntilde)) {
+      rk <- OA[r, k]
+      row_vec <- c(row_vec, D_list[[k]][rk, ])
+    }
+    D[r, ] <- row_vec
+  }
+  
+  list(D = D, D_list = D_list)
+}
+
+## ---------------------------------------------------------
+## 4. Model matrix under fixed group order with intra-group constraints
+## ---------------------------------------------------------
+
+make_X_fixed_groups_constraints <- function(D, groups, constraints) {
+  ## Intercept + intra-group PWO factors.
+  ## PWO factor corresponding to a constrained pair is removed/absorbed into intercept.
+  
+  n <- nrow(D)
+  X <- matrix(1, nrow = n, ncol = 1)
+  col_names <- "Intercept"
+  
+  constrained_pairs <- list()
+  for (cc in constraints) {
+    if (!is.null(cc)) {
+      constrained_pairs[[length(constrained_pairs) + 1]] <- sort(cc)
+    }
+  }
+  
+  is_constrained_pair <- function(i, j) {
+    pair <- sort(c(i, j))
+    any(sapply(constrained_pairs, function(cc) all(cc == pair)))
+  }
+  
+  for (g in groups) {
+    if (length(g) >= 2) {
+      pairs <- t(combn(g, 2))
+      
+      for (a in seq_len(nrow(pairs))) {
+        i <- pairs[a, 1]
+        j <- pairs[a, 2]
+        
+        if (is_constrained_pair(i, j)) next
+        
+        z <- numeric(n)
+        for (r in seq_len(n)) {
+          pos_i <- which(D[r, ] == i)
+          pos_j <- which(D[r, ] == j)
+          z[r] <- ifelse(pos_i < pos_j, 1, -1)
+        }
+        
+        X <- cbind(X, z)
+        col_names <- c(col_names, paste0("I", i, j))
+      }
+    }
+  }
+  
+  colnames(X) <- col_names
+  X
+}
+
+norm_info <- function(D, groups, constraints) {
+  X <- make_X_fixed_groups_constraints(D, groups, constraints)
+  crossprod(X) / nrow(X)
+}
+
+D_eff <- function(MD, MF) {
+  p <- ncol(MD)
+  logdet_MD <- determinant(MD, logarithm = TRUE)$modulus[1]
+  logdet_MF <- determinant(MF, logarithm = TRUE)$modulus[1]
+  as.numeric(exp((logdet_MD - logdet_MF) / p))
+}
+
+## ---------------------------------------------------------
+## 5. Full constrained design under fixed group order
+## ---------------------------------------------------------
+
+make_full_fixed_group_constrained <- function(groups, constraints) {
+  P_list <- vector("list", length(groups))
+  
+  for (k in seq_along(groups)) {
+    G <- groups[[k]]
+    cc <- constraints[[k]]
+    
+    if (is.null(cc)) {
+      P_list[[k]] <- all_perms(G)
+    } else {
+      P_list[[k]] <- make_constrained_full(G, cc[1], cc[2])
+    }
+  }
+  
+  grid <- expand.grid(lapply(P_list, function(P) seq_len(nrow(P))))
+  
+  D_full <- matrix(NA, nrow = nrow(grid), ncol = sum(sapply(groups, length)))
+  
+  for (r in seq_len(nrow(grid))) {
+    row_vec <- c()
+    for (k in seq_along(groups)) {
+      row_vec <- c(row_vec, P_list[[k]][grid[r, k], ])
+    }
+    D_full[r, ] <- row_vec
+  }
+  
+  D_full
+}
+
+## ---------------------------------------------------------
+## Fixed group order with intra-group pairwise constraints
+## 6. Example: m = 8, groups = (3,5), constraint 1 -> 2 in G1
+## ---------------------------------------------------------
+
+groups <- list(
+  G1 = 1:3,
+  G2 = 4:8
+)
+
+## Constraint only in G1: 1 -> 2
+constraints <- list(
+  c(1, 2),
+  NULL
+)
+
+## Local COofA-OA for G1: q = 3 with local constraint 1 -> 2.
+## Here the full constrained design has 3 runs.
+D1_con_local <- make_constrained_full(1:3, 1, 2)
+
+## Local OofA-OA(12,5) for G2, using local labels 1,...,5.
+D2_uncon_local <- rbind(
+  c(1, 2, 4, 5, 3),
+  c(1, 3, 4, 5, 2),
+  c(2, 1, 5, 3, 4),
+  c(2, 3, 5, 1, 4),
+  c(3, 1, 5, 2, 4),
+  c(3, 2, 4, 5, 1),
+  c(4, 1, 2, 3, 5),
+  c(4, 3, 2, 1, 5),
+  c(4, 5, 2, 3, 1),
+  c(5, 1, 4, 3, 2),
+  c(5, 2, 4, 1, 3),
+  c(5, 3, 4, 1, 2)
+)
+
+D_uncon_local_list <- list(
+  NULL,
+  D2_uncon_local
+)
+
+D_con_local_list <- list(
+  D1_con_local,
+  NULL
+)
+
+## OA(36;3^1 12^1;2)
+## Since there are only two columns, use all 3 x 12 combinations.
+OA_36_3_12 <- as.matrix(expand.grid(
+  r1 = 1:3,
+  r2 = 1:12
+))
+
+cat("Check OA(36;3^1 12^1;2):\n")
+print(check_OA_strength2(OA_36_3_12, c(3, 12)))
+
+## Apply Construction S1
+out <- construction_G22(
+  groups = groups,
+  constraints = constraints,
+  D_uncon_local_list = D_uncon_local_list,
+  D_con_local_list = D_con_local_list,
+  OA = OA_36_3_12
+)
+
+D_G22 <- out$D
+D_list <- out$D_list
+
+cat("Dimensions of group-level designs D_k:\n")
+print(lapply(D_list, dim))
+
+cat("Dimension of final design D_G22:\n")
+print(dim(D_G22))
+
+## ---------------------------------------------------------
+## 7. Verify information-matrix equality
+## ---------------------------------------------------------
+
+D_full <- make_full_fixed_group_constrained(groups, constraints)
+
+M_D <- norm_info(D_G22, groups, constraints)
+M_F <- norm_info(D_full, groups, constraints)
+
+max_diff <- max(abs(M_D - M_F))
+D_eff_value <- D_eff(M_D, M_F)
+
+cat("\nVerification results for Construction S1:\n")
+cat("Run size of constructed design n =", nrow(D_G22), "\n")
+cat("Run size of full constrained design N =", nrow(D_full), "\n")
+cat("Number of parameters p =", ncol(M_D), "\n")
+cat("max |M_D - M_F| =", max_diff, "\n")
+cat("D_eff =", D_eff_value, "\n")

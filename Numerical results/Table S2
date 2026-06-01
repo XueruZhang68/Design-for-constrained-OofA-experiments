@@ -1,1 +1,31 @@
-
+load("Table 3 (Cases 1-18).RData")
+round(c(mean(sapply(1:40,function(x){final.out.put5[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put10[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put15[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put20[[x]]$final.time}))*1440,
+  mean(sapply(1:40,function(x){final.out.put_351[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_352[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_3471[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_3472[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_3473[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_34561[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_34562[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_34563[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_34564[[x]]$final.time})),
+  mean(sapply(1:40,function(x){final.out.put_444561[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_444562[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_444563[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_444564[[x]]$final.time}))*60,
+  mean(sapply(1:40,function(x){final.out.put_444565[[x]]$final.time}))*60
+  ),3)
+load("Table 3 (Cases 19-27).RData")
+round(c(mean(sapply(1:40,function(x){final.out.put_351[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_352[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_3472[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_3473[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_34562[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_34563[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_34564[[x]]$final.time})),
+        mean(sapply(1:40,function(x){final.out.put_444563[[x]]$final.time}))*60,
+        mean(sapply(1:40,function(x){final.out.put_444564[[x]]$final.time}))*60
+),3)

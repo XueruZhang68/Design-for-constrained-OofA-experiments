@@ -20,6 +20,15 @@ experiments".
   - clean_survey_data_4162024.csv: colleted dataset for 
     - Figure 2
     - Table 5
+
+- `Constructions`: R code of Constructions 1-3 and S1-S2 
+  - Construction 1: systematic construction of COofA-OAs under Model (2)
+  - Construction 2: systematic construction of COofA-OAs under Model (3)
+  - Construction 3: systematic construction of COofA-OAs under Model (4) with a single group and a single pairwise constraint
+  - Construction S1: systematic construction of COofA-OAs under Model (4)
+  - Construction S2: systematic construction of COofA-OAs under Model (5)
+
+
     
 
 

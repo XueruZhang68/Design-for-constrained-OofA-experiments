@@ -51,6 +51,6 @@ experiments".
     - Table 3 (Cases 1-18).RData: RData of Cases 1-18 in Table 3
     - Table 3 (Cases 19-27).RData: RData of Cases 19-27 in Table 3
 
-  - ta_kahn_random_unfixed: a simplified version of Algorithm S3 is used for the cases with free group orders in Tables 1 and 3.
+  - ta_kahn_random_unfixed: a simplified version of Algorithm S3 is used for the cases with free group orders in Tables 1 and 3
 
 

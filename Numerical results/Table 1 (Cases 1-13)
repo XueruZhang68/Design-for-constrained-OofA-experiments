@@ -35,7 +35,7 @@ final.out.putfig_35 <- parLapply(cl, 1:ntotal, function(x){
 stopCluster(cl)
 save.image("D:/Table 1 (Cases 1-13).RData")
 
-
+load("Table 1 (Cases 1-13).RData")
 num_groups=c(3,5)
 result35<-(sapply(1:40,function(x){final.out.put_35[[x]]$dvalue})/prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))^{1/(sum(num_groups*(num_groups-1)/2)+1)})*100
 mean(result35)

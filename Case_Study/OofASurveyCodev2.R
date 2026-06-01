@@ -21,7 +21,7 @@ summary(score_model)
 
 library(dplyr)
 library(car)
-
+load("Figure 1.RData")
 # set.seed(123) # random sample 1
 set.seed(1234) # random sample 2
 result.para<-NULL

@@ -4,14 +4,12 @@ g_result35<-(sapply(1:40,function(x){final.out.put_35[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result35)
 nrow(final.out.put_35[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_35[[x]]$final.time}))
 
 num_groups=c(4,5)
 g_result45<-(sapply(1:40,function(x){final.out.put_45[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result45)
 nrow(final.out.put_45[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_45[[x]]$final.time}))
 
 
 num_groups=c(4,6)
@@ -19,14 +17,12 @@ g_result46<-(sapply(1:40,function(x){final.out.put_46[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result46)
 nrow(final.out.put_46[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_46[[x]]$final.time}))
 
 num_groups=c(4,8)
 g_result48<-(sapply(1:40,function(x){final.out.put_48[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result48)
 nrow(final.out.put_48[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_48[[x]]$final.time}))
 
 
 num_groups=c(7,8)
@@ -34,50 +30,42 @@ g_result78<-(sapply(1:40,function(x){final.out.put_78[[x]]$dvalue})/
              (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result78)
 nrow(final.out.put_78[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_78[[x]]$final.time}))
 
 num_groups=c(3,4,7)
 g_result347<-(sapply(1:40,function(x){final.out.put_347[[x]]$dvalue})/
               (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result347)
 nrow(final.out.put_347[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_347[[x]]$final.time}))
 
 num_groups=c(3,5,6)
 g_result356<-(sapply(1:40,function(x){final.out.put_356[[x]]$dvalue})/
               (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result356)
 nrow(final.out.put_356[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_356[[x]]$final.time}))
 
 num_groups=c(4,5,6)
 g_result456<-(sapply(1:40,function(x){final.out.put_456[[x]]$dvalue})/
               (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result456)
 nrow(final.out.put_456[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_456[[x]]$final.time}))
-
 
 num_groups=c(4,6,7)
 g_result467<-(sapply(1:40,function(x){final.out.put_467[[x]]$dvalue})/
               (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result467)
 nrow(final.out.put_467[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_467[[x]]$final.time}))
 
 num_groups=c(3,4,5,6)
 g_result3456<-(sapply(1:40,function(x){final.out.put_3456[[x]]$dvalue})/
                (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result3456)
 nrow(final.out.put_3456[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_3456[[x]]$final.time}))
 
 num_groups=c(4,5,6,7)
 g_result4567<-(sapply(1:40,function(x){final.out.put_4567[[x]]$dvalue})/
                (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result4567)
 nrow(final.out.put_4567[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_4567[[x]]$final.time}))
 
 
 num_groups=c(4,5,6,8)
@@ -85,11 +73,9 @@ g_result4568<-(sapply(1:40,function(x){final.out.put_4568[[x]]$dvalue})/
                (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result4568)
 nrow(final.out.put_4568[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_4568[[x]]$final.time}))
 
 num_groups=c(4,4,4,5,6)
 g_result44456<-(sapply(1:40,function(x){final.out.put_44456[[x]]$dvalue})/
                 (prod((num_groups+1)^(num_groups-1)/3^(num_groups*(num_groups-1)/2))*((length(num_groups)+1)^(length(num_groups)-1)/3^(length(num_groups)*(length(num_groups)-1)/2)))^{1/(sum(num_groups*(num_groups-1)/2)+length(num_groups)*(length(num_groups)-1)/2+1)})*100
 mean(g_result44456)
 nrow(final.out.put_44456[[1]]$design)
-mean(sapply(1:40,function(x){final.out.put_44456[[x]]$final.time}))

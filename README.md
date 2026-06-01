@@ -3,15 +3,15 @@ experiments".
 
 ## Folders
 - `Algorithms`: R code of Algorithms 1 and S1-S3
-  - Algorithms 1: Threshold accepting algorithm for constructing efficient designs under Model(6) when $\mathcal{C}=\tilde{\mathcal{C}}$
-  - Algorithms S1: Randomized Kahn's algorithm for topological sorting
-  - Algorithms S2: Transitive reduction algorithm
-  - Algorithms S3: A threshold accepting algorithm for constructing efficient designs under Model (6) when $\mathcal C\not=\tilde{\mathcal C}$
+  - Algorithm 1: Threshold accepting algorithm for constructing efficient designs under Model(6) when $\mathcal{C}=\tilde{\mathcal{C}}$
+  - Algorithm S1: Randomized Kahn's algorithm for topological sorting
+  - Algorithm S2: Transitive reduction algorithm
+  - Algorithm S3: A threshold accepting algorithm for constructing efficient designs under Model (6) when $\mathcal C\not=\tilde{\mathcal C}$
   
 - `Subroutines`: all subroutines used in Algorithms 1 and S1-S3
 
 - `Case study`:   
-  - Survey Questions.docx
+  - Survey Questions.docx: details of survey questions
 
   - OofASurveyCodev2.R: R code for
     - Figure 2
@@ -28,8 +28,29 @@ experiments".
   - Construction S1: systematic construction of COofA-OAs under Model (4)
   - Construction S2: systematic construction of COofA-OAs under Model (5)
 
+- `Numerical results`:   
+  - OAs used in Tables: orthogonal arrays used in Constructions to yield the COofA-OAs in Tables 1-2 and S1-S2
 
+  - Figures-code:  R code of Figures 1 and S1
+    - Figures 1: R code of Figure 1
+    - Figures S1(a): R code of Figure S1(a)
+    - Figures S1(b): R code of Figure S1(b)
     
+  - Tables-code:  code of Tables 1, 3, S1 and S2
+    - Table 1: R code of Table 1
+    - Table 3: R code of Table 3
+    - Table S1: R code of Table S1
+    - Table S2: R code of Table S2
+  
+  - Figures-data: RData of Figure 1
+    - Figure 1.RData
+    
+  - Tables-data: RData of Table 1 and 3
+    - Table 1 (Cases 1-13).RData: RData of Cases 1-13 in Table 1
+    - Table 1 (Cases 14-26).RData: RData of Cases 14-26 in Table 1
+    - Table 3 (Cases 1-18).RData: RData of Cases 1-18 in Table 3
+    - Table 3 (Cases 19-27).RData: RData of Cases 19-27 in Table 3
 
+  - 
 
 

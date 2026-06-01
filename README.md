@@ -3,10 +3,10 @@ experiments".
 
 ## Folders
 - `Algorithms`: R code of Algorithms 1 and S1-S3
-  - Algorithms 1: Threshold accepting algorithm for constructing efficient designs under Model~(6) when $\mathcal{C}=\tilde{\mathcal{C}}$
+  - Algorithms 1: Threshold accepting algorithm for constructing efficient designs under Model(6) when $\mathcal{C}=\tilde{\mathcal{C}}$
   - Algorithms S1: Randomized Kahn's algorithm for topological sorting
   - Algorithms S2: Transitive reduction algorithm
-  - Algorithms S3: A threshold accepting algorithm for constructing efficient designs under Model (6) ($\mathcal C\not=\tilde{\mathcal C}$)
+  - Algorithms S3: A threshold accepting algorithm for constructing efficient designs under Model (6) when $\mathcal C\not=\tilde{\mathcal C}$
     
 - `LACE`: R code of Algorithms 0<sub>L</sub>-3<sub>L</sub>
   - A0<sub>L</sub>: The best collection of $m$ columns from $\mathcal{L}{(D_0)}$ by  simulated annealing

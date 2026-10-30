@@ -32,7 +32,7 @@ shapiro.test(score_model2$residuals)
 ncvTest(score_model2, ~ z12 + z34 + z35 + z36 + z46 + z56)
 result.para<-cbind(result.para,summary(score_model2)$coefficients[,c(1,4)])
 }
-\round(apply(sapply(1:10^3,function(x){result.para[,2*x-1]}),1, quantile, probs = c(0.025, 0.925), na.rm = TRUE),3)
+round(apply(sapply(1:10^3,function(x){result.para[,2*x-1]}),1, quantile, probs = c(0.025, 0.925), na.rm = TRUE),3)
 
 set.seed(1234) 
 nn=14
